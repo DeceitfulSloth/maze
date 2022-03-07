@@ -58,7 +58,16 @@ def prim(m, x, y):
 
     return edges
 
-# TODO: prevent endless loop
+
+def display(full, zoom):
+    img = cv2.cvtColor(full.rendering, cv2.COLOR_BGR2RGB)
+    scaled = cv2.resize(img, (img.shape[0] * zoom, img.shape[1] * zoom), interpolation=cv2.INTER_NEAREST)
+    cv2.imshow("maze", scaled)
+    cv2.waitKey(0)
+
+
+def write_to_file(full):
+    cv2.imwrite("maze.png", full.rendering)
 
 
 class Maze:
@@ -67,11 +76,7 @@ class Maze:
         self.height = height
         self.nodes = make_nodes(width, height)
         self.edges = make_edges(self)
-
-    def display_text(self, zoom=1):
-        for x in self.nodes:
-            for y in x:
-                print(y)
+        self.rendering = self.generate_image()
 
     def generate_image(self):
         full = np.full(((self.height * 2 + 1), (self.width * 2 + 1), 3), 0, dtype=np.uint8)
@@ -82,8 +87,8 @@ class Maze:
                 full[2 * y + 1, 2 * x + 1, 0] = self.nodes[x][y].colour[0]
                 full[2 * y + 1, 2 * x + 1, 1] = self.nodes[x][y].colour[1]
                 full[2 * y + 1, 2 * x + 1, 2] = self.nodes[x][y].colour[2]
-                
-        # TODO: Paint edges
+
+        # Paint edges
         for i in self.edges:
             if i[0][0] == i[1][0]:
                 # Vertical edge
@@ -113,23 +118,9 @@ class Maze:
                     full[2 * i[0][1] + 1, 2 * i[0][0] + 2, 1] = 255
                     full[2 * i[0][1] + 1, 2 * i[0][0] + 2, 2] = 255
 
+
         return full
 
-    def write_to_file(self):
-        full = self.generate_image()
-
-        cv2.imwrite("maze.png", full)
-        cv2.waitKey(0)
-
-    def display(self, zoom):
-        full = self.generate_image()
-
-        img = cv2.cvtColor(full, cv2.COLOR_BGR2GRAY)
-        scaled = cv2.resize(img, (img.shape[0] * zoom, img.shape[1] * zoom), interpolation=cv2.INTER_NEAREST)
-
-        cv2.imshow("maze", scaled)
-        cv2.waitKey(0)
-        
     def set_node_colour(self, x, y, colour):
         self.nodes[x][y].colour = colour
 
@@ -158,10 +149,13 @@ class Maze:
         return ret
 
 
+
+
 class Node:
     def __init__(self, colour):
         self.colour = colour
         self.visited = False
+        self.distance = float('inf')
         
 
 # Main script
@@ -169,9 +163,9 @@ if __name__ == '__main__':
 
     start = time.time()
     my_maze = Maze(100, 100)
-    my_maze.write_to_file()
+    write_to_file(my_maze)
     print("Generated a maze with:", str(my_maze.width * my_maze.height), "nodes in:", str(time.time() - start), "seconds.")
-    my_maze.display(6)
+    display(my_maze, 6)
 
 
 
